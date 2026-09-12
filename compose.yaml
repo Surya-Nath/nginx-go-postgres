@@ -2,7 +2,6 @@ services:
   backend:
     build:
       context: backend
-      #target: builder
     secrets:
       - db-password
     depends_on:
