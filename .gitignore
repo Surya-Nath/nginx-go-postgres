@@ -1,0 +1,5 @@
+*.pem
+.env
+.terraform/
+*.tfstate*
+.idea
