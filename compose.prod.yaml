@@ -1,0 +1,38 @@
+services:
+  proxy:
+    image: 413816840602.dkr.ecr.ap-south-1.amazonaws.com/week6-proxy:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+  backend:
+    image: 413816840602.dkr.ecr.ap-south-1.amazonaws.com/week6-backend:latest
+    secrets:
+      - db-password
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: postgres:16
+    restart: always
+    secrets:
+      - db-password
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: example
+      POSTGRES_PASSWORD_FILE: /run/secrets/db-password
+    expose:
+      - "5432"
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  db-data:
+
+secrets:
+  db-password:
+    file: db/password.txt

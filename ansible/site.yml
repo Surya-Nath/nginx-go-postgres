@@ -1,0 +1,41 @@
+- hosts: app
+  become: true
+  vars:
+    ecr: 413816840602.dkr.ecr.ap-south-1.amazonaws.com
+  tasks:
+    - name: packages
+      apt:
+        name: [docker.io, docker-compose-v2, curl]
+        update_cache: true
+        state: present
+
+    - name: app dirs
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: ubuntu
+      loop:
+        - /home/ubuntu/app
+        - /home/ubuntu/app/db
+
+    - name: compose
+      copy:
+        src: /home/ubuntu/week6-nginx-go-postgres/compose.prod.yaml
+        dest: /home/ubuntu/app/compose.yaml
+        owner: ubuntu
+
+    - name: db password
+      copy:
+        src: /home/ubuntu/week6-nginx-go-postgres/db/password.txt
+        dest: /home/ubuntu/app/db/password.txt
+        owner: ubuntu
+        mode: "0600"
+
+    - name: ecr login
+      shell: |
+        echo "{{ ecr_password }}" | docker login --username AWS --password-stdin {{ ecr }}
+
+    - name: compose up
+      shell: docker compose up -d
+      args:
+        chdir: /home/ubuntu/app
